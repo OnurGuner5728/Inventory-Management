@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useData } from '../context/DataContext'
 import { useRealtime } from '../context/RealtimeContext'
 import ProductModal from '../components/ProductModal'
+import Barcode from 'react-barcode'
+import {QRCodeSVG} from 'qrcode.react'
 
 const Products = () => {
   const { deleteProduct } = useData()
@@ -114,6 +116,7 @@ const Products = () => {
           <thead>
             <tr className="bg-gray-100">
               <th className="border px-4 py-2" data-cy="barcode-header">Barkod</th>
+              <th className="border px-4 py-2" data-cy="qr-code-header">QR Kod</th>
               <th className="border px-4 py-2" data-cy="name-header">Ürün Adı</th>
               <th className="border px-4 py-2" data-cy="description-header">Açıklama</th>
               <th className="border px-4 py-2" data-cy="category-header">Kategori</th>
@@ -145,7 +148,10 @@ const Products = () => {
             ) : (
               filteredProducts.map(product => (
                 <tr key={product.id} className="hover:bg-gray-50">
-                  <td className="border px-4 py-2" data-cy="barcode-cell">{product.barcode || '-'}</td>
+                  <td className="border px-4 py-2" data-cy="barcode-cell"><Barcode value={product.barcode} /></td>
+                  <td className="border px-4 py-2" data-cy="qr-code-cell">
+                    <QRCodeSVG value={product.barcode} size={128} />
+                  </td>
                   <td className="border px-4 py-2" data-cy="name-cell">{product.name || '-'}</td>
                   <td className="border px-4 py-2" data-cy="description-cell">{product.description || '-'}</td>
                   <td className="border px-4 py-2" data-cy="category-cell">
