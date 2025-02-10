@@ -573,7 +573,8 @@ const DataProvider = ({ children }) => {
         deleteSupplier,
         addUnit,
         updateUnit,
-        deleteUnit
+        deleteUnit,
+        generateBarcode
       }}
     >
       {children}

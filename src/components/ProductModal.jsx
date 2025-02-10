@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useRealtime } from '../context/RealtimeContext'
+import { useData } from '../context/DataContext'
+import Barcode from 'react-barcode'
+import {QRCodeSVG} from 'qrcode.react'
 
 const ProductModal = ({ isOpen, onClose, editingProduct = null }) => {
+  const { generateBarcode } = useData()
   const {
     categories,
     addProduct,
@@ -17,6 +21,7 @@ const ProductModal = ({ isOpen, onClose, editingProduct = null }) => {
   } = useRealtime()
 
   const [formData, setFormData] = useState({
+    barcode: '',
     name: '',
     description: '',
     category_id: '',
@@ -54,6 +59,7 @@ const ProductModal = ({ isOpen, onClose, editingProduct = null }) => {
 
       // Form verilerini ayarla
       setFormData({
+        barcode: editingProduct.barcode || '',
         name: editingProduct.name || '',
         description: editingProduct.description || '',
         category_id: editingProduct.category_id || '',
@@ -77,10 +83,11 @@ const ProductModal = ({ isOpen, onClose, editingProduct = null }) => {
     } else {
       resetForm()
     }
-  }, [editingProduct, categories, settings])
+  }, [editingProduct, categories, settings, generateBarcode])
 
   const resetForm = () => {
     setFormData({
+      barcode: '',
       name: '',
       description: '',
       category_id: '',
@@ -103,6 +110,11 @@ const ProductModal = ({ isOpen, onClose, editingProduct = null }) => {
     })
     setSelectedCategory(null)
     setErrors({})
+  }
+
+  const handleGenerateBarcode = () => {
+    const newBarcode = generateBarcode()
+    setFormData(prev => ({ ...prev, barcode: newBarcode }))
   }
 
   const validateForm = () => {
@@ -329,7 +341,48 @@ const ProductModal = ({ isOpen, onClose, editingProduct = null }) => {
               {errors.submit}
             </div>
           )}
-          {/* Temel Bilgiler */}
+          <div className="mb-4">
+            <label
+              className="block text-sm font-medium text-gray-700"
+              data-cy="product-modal-barcode-label"
+            >
+              Barkod
+            </label>
+            <input
+              type="text"
+              name="barcode"
+              value={formData.barcode}
+              readOnly
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              data-cy="product-modal-barcode-input"
+            />
+            <div className="flex items-center mt-2">
+              <div className="mr-2 p-2 border rounded text-xs font-mono bg-gray-100" data-cy="product-modal-barcode-display">
+                {formData.barcode || "Barkod Yok"}
+              </div>
+              <button
+                type="button"
+                onClick={handleGenerateBarcode}
+                disabled={editingProduct ? true : false}
+                className={`px-3 py-1 text-sm ${editingProduct ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600"} text-white rounded`}
+                data-cy="product-modal-generate-barcode-button"
+              >
+                Barkod Oluştur
+              </button>
+            </div>
+            {formData.barcode && (
+              <div className="mt-4 flex flex-col md:flex-row justify-center items-center">
+                <div className="mr-4 text-center">
+                  <p className="text-sm font-medium mb-1">Barkod</p>
+                  <Barcode value={formData.barcode} />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-medium mb-1">QR Kod</p>
+                  <QRCodeSVG value={formData.barcode} size={128} />
+                </div>
+              </div>
+            )}
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700" data-cy="product-modal-name-label">
@@ -367,7 +420,6 @@ const ProductModal = ({ isOpen, onClose, editingProduct = null }) => {
             </div>
           </div>
 
-          {/* Kategori ve Alt Kategori */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700" data-cy="product-modal-category-label">
@@ -425,7 +477,6 @@ const ProductModal = ({ isOpen, onClose, editingProduct = null }) => {
             </div>
           </div>
 
-          {/* Birim ve Birim Miktar */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700" data-cy="product-modal-unit-label">
@@ -476,7 +527,6 @@ const ProductModal = ({ isOpen, onClose, editingProduct = null }) => {
             </div>
           </div>
 
-          {/* Stok Bilgileri */}
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700" data-cy="product-modal-stock-warehouse-label">
@@ -549,7 +599,6 @@ const ProductModal = ({ isOpen, onClose, editingProduct = null }) => {
             </div>
           </div>
 
-          {/* Minimum ve Maksimum Stok */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700" data-cy="product-modal-stock-min-level-label">
@@ -584,7 +633,6 @@ const ProductModal = ({ isOpen, onClose, editingProduct = null }) => {
             </div>
           </div>
 
-          {/* Fiyat Bilgileri */}
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700" data-cy="product-modal-price-buying-label">
@@ -657,7 +705,6 @@ const ProductModal = ({ isOpen, onClose, editingProduct = null }) => {
             </div>
           </div>
 
-          {/* Tedarikçi ve Son Kullanma Tarihi */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700" data-cy="product-modal-supplier-label">
@@ -708,7 +755,6 @@ const ProductModal = ({ isOpen, onClose, editingProduct = null }) => {
             </div>
           </div>
 
-          {/* Durum */}
           <div>
             <label className="block text-sm font-medium text-gray-700" data-cy="product-modal-status-label">
               Durum
@@ -725,7 +771,6 @@ const ProductModal = ({ isOpen, onClose, editingProduct = null }) => {
             </select>
           </div>
 
-          {/* Butonlar */}
           <div className="flex justify-end space-x-3 pt-4">
             <button
               type="button"
