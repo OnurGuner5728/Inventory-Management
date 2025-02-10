@@ -1,5 +1,7 @@
 # Envanter Yönetimi Uygulaması
 
+Önizleme için https://invman.netlify.app/ adresini ziyaret edebilirsiniz.
+
 Bu uygulama, işletmelerin stok ve envanter yönetimini kolaylaştırmak için geliştirilmiş modern bir web uygulamasıdır. Electron ve React kullanılarak geliştirilmiş olup, hem masaüstü hem de web ortamında çalışabilmektedir.
 
 ## Özellikler
