@@ -45,15 +45,11 @@ export default defineConfig({
     'process.env.SUPABASE_URL': JSON.stringify(process.env.SUPABASE_URL),
     'process.env.SUPABASE_ANON_KEY': JSON.stringify(process.env.SUPABASE_ANON_KEY)
   },
-  optimizeDeps: {
-    exclude: ['react-barcode']
-  },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
     emptyOutDir: true,
     rollupOptions: {
-      external: ['react-barcode'],
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
