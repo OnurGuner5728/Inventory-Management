@@ -2,7 +2,6 @@
   "name": "envanter-yonetimi",
   "private": true,
   "version": "1.00.00",
-  "type": "module",
   "main": "electron/main.js",
   "description": "Stok Takip Uygulaması",
   "author": {
