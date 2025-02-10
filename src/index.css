@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Özel stiller */
+body {
+  @apply bg-gray-50;
+}
+
+/* Form elementleri için temel stiller */
+input, select {
+  @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm;
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+}
+
+/* Butonlar için temel stiller */
+button {
+  @apply px-4 py-2 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2;
+}
+
+/* Tablo stilleri */
+table {
+  @apply w-full;
+}
+
+th {
+  @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+}
+
+td {
+  @apply px-6 py-4 whitespace-nowrap text-sm;
+}
+
+/* Modal stilleri */
+.modal-overlay {
+  @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4;
+}
+
+.modal-content {
+  @apply bg-white rounded-lg p-6 w-full max-w-md;
+}
