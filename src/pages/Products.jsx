@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react'
-import { useData } from '../context/DataContext'
 import { useRealtime } from '../context/RealtimeContext'
 import ProductModal from '../components/ProductModal'
 import Barcode from 'react-barcode'
 import {QRCodeSVG} from 'qrcode.react'
 
 const Products = () => {
-  const { deleteProduct } = useData()
+  const { deleteProduct } = useRealtime()
   const { products, categories, suppliers, units, refetchData } = useRealtime()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
@@ -33,7 +32,6 @@ const Products = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Bu ürünü silmek istediğinize emin misiniz?')) {
       await deleteProduct(id)
-      refetchData()
     }
   }
 

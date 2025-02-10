@@ -232,23 +232,16 @@ const DataProvider = ({ children }) => {
 
   const deleteProduct = async (id) => {
     try {
-      const product = data.products.find(p => p.id === id)
-      if (!product) {
-        throw new Error('Ürün bulunamadı')
-      }
-
+      // Ürün mevcut olmayabilir; direkt silme işlemi gerçekleştiriliyor.
       // Önce ürüne ait stok hareketlerini sil
       await stockMovementOperations.deleteByProductId(id)
-
       // Sonra ürünü sil
       await productOperations.delete(id)
-
       setData(prev => ({
         ...prev,
         products: prev.products.filter(p => p.id !== id),
         stockMovements: prev.stockMovements.filter(sm => sm.product_id !== id)
       }))
-
       return true
     } catch (error) {
       console.error('Ürün silinirken hata oluştu:', error)
