@@ -50,6 +50,7 @@ export default defineConfig({
     assetsDir: 'assets',
     emptyOutDir: true,
     rollupOptions: {
+      external: ['react-barcode'],
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
