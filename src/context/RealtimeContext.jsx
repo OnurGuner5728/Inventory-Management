@@ -358,8 +358,17 @@ export const RealtimeProvider = ({ children }) => {
 
   const updateProduct = async (id, productData) => {
     try {
-      const updatedProduct = await productOperations.update(id, productData)
-      // Ürünü direkt state'te güncelle
+      // Gelen veriyi kontrol edelim
+      console.log('RealtimeContext - Güncelleme verisi:', productData)
+
+      const updatedProduct = await productOperations.update(id, {
+        ...productData,
+        // Barkod değerini açıkça belirtelim
+        barcode: productData.barcode,
+        updated_at: new Date().toISOString()
+      })
+
+      // State'i güncelle
       setRealtimeData(prev => ({
         ...prev,
         products: prev.products.map(prod => 
@@ -368,9 +377,11 @@ export const RealtimeProvider = ({ children }) => {
             : prod
         )
       }))
+
       toast.success('Ürün başarıyla güncellendi')
       return updatedProduct
     } catch (error) {
+      console.error('RealtimeContext - Ürün güncellenirken hata:', error)
       toast.error('Ürün güncellenirken hata oluştu')
       throw error
     }

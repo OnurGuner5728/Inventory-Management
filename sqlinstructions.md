@@ -1,8 +1,4 @@
-import React from 'react'
-import { toast } from 'react-toastify'
-
-const SqlInstructions = ({ onRetry }) => {
-  const sqlCode = `-- Tabloları oluştur
+-- Tabloları oluştur
 CREATE TABLE IF NOT EXISTS units (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -313,41 +309,4 @@ SELECT setval('products_id_seq', (SELECT MAX(id) FROM products));
 SELECT setval('suppliers_id_seq', (SELECT MAX(id) FROM suppliers));
 SELECT setval('units_id_seq', (SELECT MAX(id) FROM units));
 SELECT setval('stock_movements_id_seq', (SELECT MAX(id) FROM stock_movements));
-SELECT setval('settings_id_seq', (SELECT MAX(id) FROM settings));`
-
-  return (
-    <div className="bg-white shadow rounded-lg p-6" data-cy="settings-page-instructions">
-      <h2 className="text-lg font-medium mb-4" data-cy="settings-page-instructions-title">Veritabanı Kurulum Adımları</h2>
-      <p className="text-sm text-gray-600 mb-4">
-        Aşağıdaki SQL kodunu Supabase SQL Editöründe çalıştırarak veritabanı tablolarını ve örnek verileri oluşturabilirsiniz.
-        Bu işlem mevcut verileri silecek ve yerine örnek veriler ekleyecektir.
-      </p>
-      <div className="relative">
-        <pre className="bg-gray-50 rounded-lg p-4 text-sm overflow-x-auto">
-          <code className="language-sql">{sqlCode}</code>
-        </pre>
-        <button
-          onClick={() => {
-            navigator.clipboard.writeText(sqlCode)
-            toast.success('SQL kodu panoya kopyalandı')
-          }}
-          className="absolute top-2 right-2 p-2 text-gray-500 hover:text-gray-700 bg-white rounded-md shadow-sm"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
-            <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
-          </svg>
-        </button>
-      </div>
-      <button 
-        onClick={onRetry}
-        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        data-cy="settings-page-retry-button"
-      >
-        Tekrar Dene
-      </button>
-    </div>
-  )
-}
-
-export default SqlInstructions
+SELECT setval('settings_id_seq', (SELECT MAX(id) FROM settings));

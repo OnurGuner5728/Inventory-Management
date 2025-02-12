@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRealtime } from '../context/RealtimeContext'
 import { useData } from '../context/DataContext'
 import Barcode from 'react-barcode'
@@ -45,6 +45,8 @@ const ProductModal = ({ isOpen, onClose, editingProduct = null }) => {
 
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [errors, setErrors] = useState({})
+  const [isManualBarcode, setIsManualBarcode] = useState(false)
+  const barcodeInputRef = useRef(null)
 
   useEffect(() => {
     console.log('Mevcut tedarikçiler:', suppliers)
@@ -80,6 +82,9 @@ const ProductModal = ({ isOpen, onClose, editingProduct = null }) => {
         expiry_date: editingProduct.expiry_date ? new Date(editingProduct.expiry_date).toISOString().split('T')[0] : '',
         status: editingProduct.status || 'active'
       })
+
+      // Eğer düzenlenen ürünün barcode'u varsa manuel modu aç
+      setIsManualBarcode(!!editingProduct.barcode)
     } else {
       resetForm()
     }
@@ -110,15 +115,54 @@ const ProductModal = ({ isOpen, onClose, editingProduct = null }) => {
     })
     setSelectedCategory(null)
     setErrors({})
+    setIsManualBarcode(false)
   }
 
   const handleGenerateBarcode = () => {
+    // Düzenleme modunda bile barkod üretilebilsin
+    setIsManualBarcode(false) // Manuel modu kapat
     const newBarcode = generateBarcode()
     setFormData(prev => ({ ...prev, barcode: newBarcode }))
   }
 
+  const handleManualBarcode = () => {
+    setIsManualBarcode(!isManualBarcode)
+    if (!isManualBarcode) {
+      // Manuel mod açıldığında input'a focus ol
+      setTimeout(() => {
+        barcodeInputRef.current?.focus()
+      }, 0)
+    }
+  }
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    
+    // Barkod için özel kontrol
+    if (name === 'barcode') {
+      // Sadece sayısal değer ve maksimum 13 karakter kontrolü
+      if (value === '' || (/^\d+$/.test(value) && value.length <= 13)) {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value
+        }))
+      }
+      return
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
   const validateForm = () => {
     const newErrors = {}
+    
+    // Barkod kontrolü
+    if (isManualBarcode && (!formData.barcode || formData.barcode.length !== 13)) {
+      newErrors.barcode = 'Barkod 13 haneli olmalıdır'
+    }
     
     // Zorunlu alan kontrolleri
     if (!formData.name?.trim()) newErrors.name = 'Ürün adı gerekli'
@@ -167,6 +211,7 @@ const ProductModal = ({ isOpen, onClose, editingProduct = null }) => {
     // Sayısal değerleri dönüştür
     const processedData = {
       ...productData,
+      barcode: formData.barcode || null, // Barkod boşsa null olarak gönder
       unit_amount: Number(productData.unit_amount),
       stock_warehouse: Number(productData.stock_warehouse),
       stock_shelf: Number(productData.stock_shelf),
@@ -230,14 +275,6 @@ const ProductModal = ({ isOpen, onClose, editingProduct = null }) => {
     }))
   }
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-  }
-
   const handleNumericInput = (e) => {
     const { name, value } = e.target
     
@@ -245,17 +282,17 @@ const ProductModal = ({ isOpen, onClose, editingProduct = null }) => {
     if (value === '') {
       setFormData(prev => ({
         ...prev,
-        [name]: ''
+        [name]: 0
       }))
       return
     }
 
     // Sayısal değer kontrolü
-    const numValue = parseFloat(value)
+    const numValue = parseInt(value, 10)
     if (!isNaN(numValue)) {
       setFormData(prev => ({
         ...prev,
-        [name]: value // Direkt string olarak saklıyoruz
+        [name]: Math.max(0, numValue) // Negatif değerleri 0'a çevir
       }))
     }
   }
@@ -342,34 +379,51 @@ const ProductModal = ({ isOpen, onClose, editingProduct = null }) => {
             </div>
           )}
           <div className="mb-4">
-            <label
-              className="block text-sm font-medium text-gray-700"
-              data-cy="product-modal-barcode-label"
-            >
+            <label className="block text-sm font-medium text-gray-700" data-cy="product-modal-barcode-label">
               Barkod
             </label>
-            <input
-              type="text"
-              name="barcode"
-              value={formData.barcode}
-              readOnly
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              data-cy="product-modal-barcode-input"
-            />
-            <div className="flex items-center mt-2">
-              <div className="mr-2 p-2 border rounded text-xs font-mono bg-gray-100" data-cy="product-modal-barcode-display">
-                {formData.barcode || "Barkod Yok"}
+            <div className="mt-1 flex space-x-2">
+              <input
+                ref={barcodeInputRef}
+                type="text"
+                name="barcode"
+                value={formData.barcode}
+                onChange={handleInputChange}
+                className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
+                  errors.barcode ? 'border-red-500' : ''
+                }`}
+                placeholder="Barkod numarası"
+                data-cy="product-modal-barcode-input"
+                disabled={!isManualBarcode}
+              />
+              <div className="flex space-x-2">
+                <button
+                  type="button"
+                  onClick={handleGenerateBarcode}
+                  className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-200"
+                  data-cy="product-modal-generate-barcode-button"
+                >
+                  Otomatik Üret
+                </button>
+                <button
+                  type="button"
+                  onClick={handleManualBarcode}
+                  className={`px-3 py-2 ${
+                    isManualBarcode 
+                      ? 'bg-green-600 hover:bg-green-700' 
+                      : 'bg-gray-600 hover:bg-gray-700'
+                  } text-white rounded transition-colors duration-200`}
+                  data-cy="product-modal-manual-barcode-button"
+                >
+                  Manuel Giriş
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={handleGenerateBarcode}
-                disabled={editingProduct ? true : false}
-                className={`px-3 py-1 text-sm ${editingProduct ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600"} text-white rounded`}
-                data-cy="product-modal-generate-barcode-button"
-              >
-                Barkod Oluştur
-              </button>
             </div>
+            {errors.barcode && (
+              <p className="text-red-500 text-xs mt-1" data-cy="product-modal-barcode-error">
+                {errors.barcode}
+              </p>
+            )}
             {formData.barcode && (
               <div className="mt-4 flex flex-col md:flex-row justify-center items-center">
                 <div className="mr-4 text-center">

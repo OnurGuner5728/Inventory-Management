@@ -159,34 +159,43 @@ export const productOperations = {
     return data[0]
   },
   
-  update: async (id, product) => {
-    const { data, error } = await supabase
+  update: async (id, data) => {
+    console.log('Supabase - Ürün güncelleme verisi:', data)
+    
+    const { data: updatedProduct, error } = await supabase
       .from('products')
       .update({
-        name: product.name,
-        description: product.description,
-        category_id: product.category_id,
-        sub_category_id: product.sub_category_id,
-        unit_id: product.unit_id,
-        unit_amount: product.unit_amount,
-        stock_warehouse: product.stock_warehouse,
-        stock_shelf: product.stock_shelf,
-        stock_min_level: product.stock_min_level,
-        stock_max_level: product.stock_max_level,
-        shelf_location: product.shelf_location,
-        price_buying: product.price_buying,
-        price_selling: product.price_selling,
-        price_currency: product.price_currency,
-        vat_rate: product.vat_rate,
-        supplier_id: product.supplier_id,
-        expiry_date: product.expiry_date,
-        status: product.status,
+        barcode: data.barcode,  // Barkodu açıkça belirt
+        name: data.name,
+        description: data.description,
+        category_id: data.category_id,
+        sub_category_id: data.sub_category_id,
+        unit_id: data.unit_id,
+        unit_amount: data.unit_amount,
+        stock_warehouse: data.stock_warehouse,
+        stock_shelf: data.stock_shelf,
+        stock_min_level: data.stock_min_level,
+        stock_max_level: data.stock_max_level,
+        shelf_location: data.shelf_location,
+        price_buying: data.price_buying,
+        price_selling: data.price_selling,
+        price_currency: data.price_currency,
+        vat_rate: data.vat_rate,
+        supplier_id: data.supplier_id,
+        expiry_date: data.expiry_date,
+        status: data.status,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
       .select()
-    if (error) throw error
-    return data[0]
+      .single()
+
+    if (error) {
+      console.error('Supabase - Ürün güncelleme hatası:', error)
+      throw error
+    }
+
+    return updatedProduct
   },
   
   delete: async (id) => {

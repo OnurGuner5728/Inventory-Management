@@ -14,6 +14,7 @@ import Units from './pages/Units'
 import Settings from './pages/Settings'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import AIChat from './components/AIChat'
 
 const AppContent = () => {
     const { isConfigured, loading } = useSupabase()
@@ -55,6 +56,14 @@ const AppContent = () => {
                                 <Route path="/settings" element={<Settings />} />
                             </Routes>
                         </main>
+                        <AIChat 
+                            onOpenProductModal={() => console.log("Ürün ekleme modalı açılacak")}
+                            onOpenCategoryModal={() => console.log("Kategori ekleme modalı açılacak")}
+                            onOpenStockMovementModal={() => console.log("Stok hareketi modalı açılacak")}
+                            onOpenStockCountingModal={() => console.log("Stok sayımı modalı açılacak")}
+                            onOpenSupplierModal={() => console.log("Tedarikçi ekleme modalı açılacak")}
+                            onOpenUnitModal={() => console.log("Birim ekleme modalı açılacak")}
+                        />
                     </div>
                 </Router>
             </RealtimeProvider>
