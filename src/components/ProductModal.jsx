@@ -140,8 +140,8 @@ const ProductModal = ({ isOpen, onClose, editingProduct = null }) => {
     
     // Barkod için özel kontrol
     if (name === 'barcode') {
-      // Sadece sayısal değer ve maksimum 13 karakter kontrolü
-      if (value === '' || (/^\d+$/.test(value) && value.length <= 13)) {
+      // Sadece sayısal değer ve 13-15 karakter kontrolü
+      if (value === '' || (/^\d+$/.test(value) && value.length <= 15)) {
         setFormData(prev => ({
           ...prev,
           [name]: value
@@ -160,8 +160,10 @@ const ProductModal = ({ isOpen, onClose, editingProduct = null }) => {
     const newErrors = {}
     
     // Barkod kontrolü
-    if (isManualBarcode && (!formData.barcode || formData.barcode.length !== 13)) {
-      newErrors.barcode = 'Barkod 13 haneli olmalıdır'
+    if (isManualBarcode && formData.barcode) {
+      if (formData.barcode.length < 13 || formData.barcode.length > 15) {
+        newErrors.barcode = 'Barkod 13 ile 15 haneli olmalıdır'
+      }
     }
     
     // Zorunlu alan kontrolleri
