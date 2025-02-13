@@ -26,7 +26,7 @@ const AIChat = (props) => {
     addSupplier, updateSupplier, deleteSupplier,
     settings, refetchData: fetchInitialData 
   } = useRealtime()
-  const [windowSize, setWindowSize] = useState('normal') // 'minimized', 'normal', 'maximized'
+  const [windowSize, setWindowSize] = useState('minimized') // 'minimized', 'normal', 'maximized'
   const [learnedCommands, setLearnedCommands] = useState({})
 
   // Session başlatma ve yönetimi için useEffect güncellemesi
@@ -341,7 +341,7 @@ const AIChat = (props) => {
           className="w-full h-full flex items-center justify-center text-red-500 border-2 border-red-500 square-full"
           title="AI Asistan'ı Aç"
         >
-          <RiRobot2Fill size={24} className="animate-pulse" />
+          <RiRobot2Fill size={24} className="animate-pulse"  />
         </div>
       ) : (
         <>

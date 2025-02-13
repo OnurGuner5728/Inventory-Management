@@ -3,7 +3,13 @@ import { supabase } from '../utils/supabase'
 import { categoryOperations, subCategoryOperations, productOperations, stockMovementOperations, supplierOperations, unitOperations } from '../utils/supabase'
 import { toast } from 'react-toastify'
 
-const RealtimeContext = createContext()
+const RealtimeContext = createContext({
+  categories: [],
+  products: [],
+  stockMovements: [],
+  suppliers: [],
+  units: []
+})
 
 export const RealtimeProvider = ({ children }) => {
   const [realtimeData, setRealtimeData] = useState({
@@ -432,8 +438,8 @@ export const RealtimeProvider = ({ children }) => {
 
 export const useRealtime = () => {
   const context = useContext(RealtimeContext)
-  if (context === undefined) {
-    throw new Error('useRealtime hook\'u RealtimeProvider içinde kullanılmalıdır')
+  if (!context) {
+    throw new Error('useRealtime must be used within a RealtimeProvider')
   }
   return context
 } 

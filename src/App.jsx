@@ -15,6 +15,7 @@ import Settings from './pages/Settings'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import AIChat from './components/AIChat'
+import PointOfSales from './pages/PointOfSales'
 
 const AppContent = () => {
     const { isConfigured, loading } = useSupabase()
@@ -54,6 +55,7 @@ const AppContent = () => {
                                 <Route path="/suppliers" element={<Suppliers />} />
                                 <Route path="/units" element={<Units />} />
                                 <Route path="/settings" element={<Settings />} />
+                                <Route path="/pos" element={<PointOfSales />} />
                             </Routes>
                         </main>
                         <AIChat 

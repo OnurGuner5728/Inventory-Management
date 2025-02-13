@@ -12,6 +12,7 @@ function Navbar() {
         { name: 'Tedarikçiler', path: '/suppliers' },
         { name: 'Birimler', path: '/units' },
         { name: 'Ayarlar', path: '/settings' },
+        { name: 'Pos', path: '/pos' },
 
     ]
 
