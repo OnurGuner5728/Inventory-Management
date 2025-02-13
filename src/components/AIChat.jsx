@@ -338,7 +338,7 @@ const AIChat = (props) => {
       {windowSize === 'minimized' ? (
         <div 
           onClick={toggleMinimize}
-          className="w-full h-full flex items-center justify-center text-white"
+          className="w-full h-full flex items-center justify-center text-red-500 border-2 border-red-500 square-full"
           title="AI Asistan'ı Aç"
         >
           <RiRobot2Fill size={24} className="animate-pulse" />
