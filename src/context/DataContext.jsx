@@ -541,6 +541,29 @@ const DataProvider = ({ children }) => {
     }
   }
 
+  // Yeni satış işlemini gerçekleştiren fonksiyon
+  const handleProductSale = async (cartItems) => {
+    try {
+      for (const item of cartItems) {
+        const product = data.products.find(p => p.id === item.id)
+        if (!product) continue
+        const newStockShelf = Number(product.stock_shelf || 0) - item.quantity
+        if (newStockShelf < 0) {
+          throw new Error(`Yetersiz stok: ${product.name}`)
+        }
+        const updatedProductData = {
+          ...product,
+          stock_shelf: newStockShelf
+        }
+        await updateProduct(product.id, updatedProductData, { skipStockMovement: false })
+      }
+      return true
+    } catch (error) {
+      console.error('Satış işlemi sırasında hata:', error)
+      throw error
+    }
+  }
+
   return (
     <DataContext.Provider
       value={{
@@ -567,7 +590,8 @@ const DataProvider = ({ children }) => {
         addUnit,
         updateUnit,
         deleteUnit,
-        generateBarcode
+        generateBarcode,
+        handleProductSale
       }}
     >
       {children}
