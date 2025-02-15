@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { useData } from '../context/DataContext'
+import { useRealtime } from '../context/RealtimeContext'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   PieChart, Pie, Cell, LineChart, Line, ResponsiveContainer,
@@ -12,7 +12,7 @@ import { CSVLink } from 'react-csv'
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d']
 
 const CustomAnalysis = () => {
-  const { products, categories, stockMovements, units, suppliers } = useData()
+  const { products, categories, stockMovements, units, suppliers } = useRealtime()
   
   // getGroupKey fonksiyonunu en başta tanımlayalım
   const getGroupKey = (item, groupBy) => {

@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useData } from '../context/DataContext'
 import { useRealtime } from '../context/RealtimeContext'
 
 function StockMovementModal({ isOpen, onClose }) {
-  const { products, suppliers, addStockMovement } = useData()
+  const { products, suppliers, addStockMovement } = useRealtime()
   const { refetchData } = useRealtime()
 
   const [formData, setFormData] = useState({

@@ -1,10 +1,8 @@
 import { useState } from 'react'
-import { useData } from '../context/DataContext'
 import { useRealtime } from '../context/RealtimeContext'
 
 const Counting = ({ product, onClose }) => {
-  const { updateProduct } = useData()
-  const { refetchData } = useRealtime()
+  const { updateProduct, refetchData } = useRealtime()
 
   // Sayıma başlarken mevcut stok değerlerini state'e aktaralım
   const [countedWarehouse, setCountedWarehouse] = useState(product.stock_warehouse)

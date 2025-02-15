@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useRealtime } from '../context/RealtimeContext'
 import CategoryModal from '../components/CategoryModal'
-import { toast } from 'react-toastify'
+
 
 function Categories() {
   const { categories, addCategory, updateCategory, deleteCategory, addSubCategory, updateSubCategory, deleteSubCategory } = useRealtime()

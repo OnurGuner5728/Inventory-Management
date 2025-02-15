@@ -7,7 +7,17 @@ const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-
 class ChatService {
   constructor() {
     this.SYSTEM_CONTEXT = `
-    Sen gelişmiş bir stok yönetim sistemi AI asistanısın. Kullanıcıların doğal dil ile verdikleri komutları anlayıp uygun işlemleri gerçekleştirmeye yardımcı olursun.
+    Sen gelişmiş bir stok yönetim sistemi AI asistanısın. Adın Asistan ve kişiliğin var.
+    Kullanıcılarla doğal ve samimi bir şekilde sohbet edersin. Her soruya aynı kalıp cevapları vermek yerine,
+    bağlama uygun, doğal ve çeşitli yanıtlar verirsin.
+
+    Kişilik özelliklerin:
+    - Yardımsever ve pozitifsin
+    - Türkçe karakterini iyi yansıtırsın (ama resmi değil, samimi bir üslup kullanırsın)
+    - Espri yapabilirsin
+    - Sohbeti tekdüze olmaktan çıkarırsın
+    - Her soruya farklı şekillerde cevap verebilirsin
+    - Duygusal zeka gösterirsin
 
     İşlem Yeteneklerin:
     1. Kategori İşlemleri: Ekleme, düzenleme, silme, listeleme
@@ -21,6 +31,8 @@ class ChatService {
     2. Belirsizlik durumunda detay iste
     3. Her işlem sonrası geri bildirim ver
     4. Hataları anlaşılır şekilde açıkla
+    5. Aynı kalıp cevapları tekrar tekrar verme
+    6. Doğal bir sohbet akışı sağla
 
     Örnek Komutlar:
     - "ürünler sayfasına git" -> Ürünler sayfasına yönlendirir
@@ -87,6 +99,7 @@ class ChatService {
       },
       category: {
         patterns: [
+          /([a-zA-ZğĞüÜşŞıİöÖçÇ]+)\s+adında\s+kategori\s+(?:ekle|oluştur|kaydet)/i,
           /kategori\s+(?:ekle|oluştur|kaydet)/i,
           /yeni\s+kategori/i,
           /kategori\s+(?:güncelle|düzenle|sil)/i,
@@ -187,11 +200,16 @@ class ChatService {
   }
 
   async callGeminiAPI(message, retryCount = 0) {
+    // API anahtarını kontrol et
+    if (!import.meta.env.VITE_GEMINI_API_KEY) {
+      return null // API anahtarı yoksa direkt null dön
+    }
+
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT)
 
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${import.meta.env.VITE_GEMINI_API_KEY}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -211,22 +229,15 @@ class ChatService {
       clearTimeout(timeoutId)
 
       if (!response.ok) {
-        if (response.status === 429 && retryCount < MAX_RETRIES) {
-          const retryAfter = response.headers.get('Retry-After') || Math.pow(2, retryCount)
-          await new Promise(resolve => setTimeout(resolve, retryAfter * 1000))
-          return this.callGeminiAPI(message, retryCount + 1)
-        }
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`)
       }
 
       const result = await response.json()
       return result.candidates[0].content.parts[0].text
 
     } catch (error) {
-      if (error.name === 'AbortError') {
-        throw new Error('İstek zaman aşımına uğradı')
-      }
-      throw error
+      console.warn('Gemini API hatası:', error)
+      return null // Hata durumunda null dön
     }
   }
 
@@ -236,46 +247,98 @@ class ChatService {
         throw new Error('Geçersiz metin girişi')
       }
 
-      // 1. Sohbet kontrolü
-      const conversationResponse = await this.handleConversation(text)
+      // Önce basit konuşma kontrolü yapalım
+      const conversationResponse = this.handleConversation(text)
       if (conversationResponse) {
         return conversationResponse
       }
 
-      // 2. Yardım kontrolü
-      if (text.match(/(?:yardım|help|komutlar|neler yapabilirsin)/i)) {
-        return this.showHelp()
+      // Alt kategori ekleme işlemi için özel kontrol
+      if (text.toLowerCase().includes('alt kategori') && text.toLowerCase().includes('ekle')) {
+        const categoryMatch = text.match(/([a-zA-ZğĞüÜşŞıİöÖçÇ]+)(?:'e|'a)\s+([a-zA-ZğĞüÜşŞıİöÖçÇ]+)\s+alt kategori/i) ||
+                            text.match(/([a-zA-ZğĞüÜşŞıİöÖçÇ]+)\s+kategorisine\s+([a-zA-ZğĞüÜşŞıİöÖçÇ]+)\s+alt/i)
+        
+        if (categoryMatch) {
+          const [_, parentCategory, subCategory] = categoryMatch
+          
+          // Ana kategoriyi bulalım
+          const { data: categories } = await supabase
+            .from('categories')
+            .select('id, name')
+            .ilike('name', parentCategory)
+            .limit(1)
+          
+          if (categories?.length > 0) {
+            const parentId = categories[0].id
+            await context.addSubCategory(parentId, {
+              name: subCategory,
+              description: `${subCategory} alt kategorisi`,
+              parent_id: parentId
+            })
+            
+            return {
+              success: true,
+              message: `"${categories[0].name}" kategorisine "${subCategory}" alt kategorisi başarıyla eklendi.`
+            }
+          } else {
+            return {
+              success: false,
+              message: `"${parentCategory}" isimli kategori bulunamadı.`
+            }
+          }
+        }
       }
 
-      // 3. Öğrenme modu kontrolü
-      if (text.toLowerCase().includes('öğren:') || text.toLowerCase().includes('kaydet:')) {
-        return await this.handleLearningMode(text)
+      try {
+        // Gemini API'den yanıt almayı deneyelim
+        const aiResponse = await this.callGeminiAPI(text)
+        if (aiResponse) {
+          // Niyet analizi yapalım
+          const intent = await this.analyzeIntent(text)
+          if (intent) {
+            // Parametreleri çıkaralım
+            const params = await this.extractParams(text, intent)
+            
+            // İşlemi yürütelim
+            const result = await this.executeAction(intent, params, context)
+            
+            return {
+              success: true,
+              message: result.message || aiResponse,
+              action: result.action
+            }
+          }
+          
+          // Intent bulunamadıysa sadece AI yanıtını döndürelim
+          return {
+            success: true,
+            message: aiResponse
+          }
+        }
+      } catch (error) {
+        console.warn('Gemini API hatası:', error)
+        // API hatası durumunda intent analizi ile devam edelim
       }
 
-      // 4. Geçmiş sorgulama kontrolü
-      if (text.toLowerCase().includes('son konuşma') || text.toLowerCase().includes('geçmiş')) {
-        return await this.handleHistoryQuery()
-      }
-
-      // 5. Niyet Analizi
+      // Niyet analizi yapalım
       const intent = await this.analyzeIntent(text)
       if (!intent) {
         return {
           success: false,
-          message: 'Üzgünüm, ne yapmak istediğinizi tam olarak anlayamadım. Size nasıl yardımcı olabileceğimi öğrenmek için "yardım" yazabilirsiniz.'
+          message: 'Üzgünüm, ne yapmak istediğinizi anlayamadım.'
         }
       }
 
-      // 6. Parametre Çıkarımı
+      // Parametreleri çıkaralım
       const params = await this.extractParams(text, intent)
       
-      // 7. İşlem Yürütme
+      // İşlemi yürütelim
       const result = await this.executeAction(intent, params, context)
       
       return {
         success: true,
-        message: this.formatActionResponse(intent, result),
-        action: this.getActionDetails(intent, result)
+        message: result.message,
+        action: result.action
       }
 
     } catch (error) {
@@ -287,21 +350,118 @@ class ChatService {
     }
   }
 
+  extractActionsFromResponse(response) {
+    const actions = []
+    
+    // Modal açma aksiyonları
+    if (response.toLowerCase().includes('modal')) {
+      const modalTypes = {
+        'ürün': 'product',
+        'kategori': 'category',
+        'stok': 'stockMovement',
+        'sayım': 'stockCounting',
+        'tedarikçi': 'supplier',
+        'birim': 'unit'
+      }
+
+      for (const [key, value] of Object.entries(modalTypes)) {
+        if (response.toLowerCase().includes(key)) {
+          actions.push({
+            type: 'modal',
+            modalType: value
+          })
+          break
+        }
+      }
+    }
+
+    // Sayfa yönlendirme aksiyonları
+    for (const [key, path] of Object.entries(this.paths)) {
+      if (response.toLowerCase().includes(key)) {
+        actions.push({
+          type: 'navigation',
+          path: path
+        })
+        break
+      }
+    }
+
+    // Direkt işlem aksiyonları
+    const directActions = {
+      'kategori ekle': 'category_create',
+      'ürün ekle': 'product_create',
+      'stok güncelle': 'product_stock',
+      'tedarikçi ekle': 'supplier_create',
+      'birim ekle': 'unit_create'
+    }
+
+    for (const [key, value] of Object.entries(directActions)) {
+      if (response.toLowerCase().includes(key)) {
+        actions.push({
+          type: 'direct',
+          operation: value
+        })
+        break
+      }
+    }
+
+    return actions
+  }
+
   async handleConversation(text) {
     const greetings = /(?:merhaba|selam|naber|nasılsın)/i
     const thanks = /(?:teşekkür|sağol|eyvallah)/i
+    const identity = /(?:sen kimsin|kendini tanıt|kimsin sen)/i
     
+    // Önce yerel yanıtları kontrol et
+    let response = null
     if (greetings.test(text)) {
-      return {
-        success: true,
-        message: 'Merhaba! Size nasıl yardımcı olabilirim? Komutları görmek için "yardım" yazabilirsiniz.'
-      }
+      const responses = [
+        'Merhaba! Bugün size nasıl yardımcı olabilirim?',
+        'Selam! Hoş geldiniz. Size nasıl destek olabilirim?',
+        'Merhabalar! Stok yönetimi konusunda size yardımcı olmak için buradayım.',
+        'Selamlar! Sistemle ilgili her konuda yardımcı olmaktan mutluluk duyarım.'
+      ]
+      response = responses[Math.floor(Math.random() * responses.length)]
     } else if (thanks.test(text)) {
+      const responses = [
+        'Rica ederim! Başka bir konuda yardıma ihtiyacınız olursa buradayım.',
+        'Ne demek, her zaman yardımcı olmaktan mutluluk duyarım!',
+        'Rica ederim! Başka sorularınız varsa çekinmeden sorabilirsiniz.',
+        'Önemli değil! Size yardımcı olabildiysem ne mutlu bana.'
+      ]
+      response = responses[Math.floor(Math.random() * responses.length)]
+    } else if (identity.test(text)) {
+      const responses = [
+        'Ben bu stok yönetim sisteminin AI asistanıyım. Size yardımcı olmak için buradayım ve sistemle ilgili her türlü işlemi yapabilirim.',
+        'Stok yönetimi konusunda size yardımcı olmak için tasarlanmış bir yapay zeka asistanıyım. Ürünler, kategoriler, stok hareketleri gibi konularda size destek olabilirim.',
+        'Merhaba! Ben sistemin AI asistanıyım. Stok yönetimi, ürün takibi, raporlama gibi konularda size yardımcı oluyorum. Nasıl destek olabilirim?'
+      ]
+      response = responses[Math.floor(Math.random() * responses.length)]
+    }
+
+    // Eğer yerel yanıt varsa onu kullan
+    if (response) {
       return {
         success: true,
-        message: 'Rica ederim! Başka bir konuda yardıma ihtiyacınız olursa bana sorabilirsiniz.'
+        message: response
       }
     }
+
+    // Yerel yanıt yoksa Gemini API'yi dene
+    try {
+      const aiResponse = await this.callGeminiAPI(text)
+      if (aiResponse) {
+        return {
+          success: true,
+          message: aiResponse
+        }
+      }
+    } catch (error) {
+      console.warn('Gemini API yanıt vermedi')
+    }
+
+    // Hiçbir yanıt alınamadıysa null dön
     return null
   }
 
@@ -346,22 +506,8 @@ Her zaman daha doğal bir dille konuşabilirsiniz. Size yardımcı olmak için e
   }
 
   formatActionResponse(intent, result) {
-    switch (intent.domain) {
-      case 'category':
-        return `Kategori işlemi başarıyla tamamlandı: ${result.name}`
-      case 'product':
-        return `Ürün işlemi başarıyla tamamlandı: ${result.name}`
-      case 'supplier':
-        return `Tedarikçi işlemi başarıyla tamamlandı: ${result.name}`
-      case 'unit':
-        return `Birim işlemi başarıyla tamamlandı: ${result.name}`
-      case 'stockMovement':
-        return `Stok hareketi başarıyla kaydedildi`
-      case 'navigation':
-        return `"${result.path}" sayfasına yönlendiriliyorsunuz`
-      default:
-        return `İşlem başarıyla tamamlandı: ${JSON.stringify(result)}`
-    }
+    const message = result && result.message ? result.message : 'İşlem başarıyla tamamlandı.'
+    return `AI Asistan: ${message}`
   }
 
   getActionDetails(intent, result) {
@@ -375,29 +521,44 @@ Her zaman daha doğal bir dille konuşabilirsiniz. Size yardımcı olmak için e
         type: 'modal',
         modalType: result.modalType
       }
+    } else if (['category', 'product', 'supplier', 'unit', 'stockMovement'].includes(intent.domain)) {
+      return {
+        type: 'direct',
+        operation: `${intent.domain}_${intent.action}`
+      }
     }
     return null
   }
 
   async analyzeIntent(text) {
-    try {
-      // Her bir pattern grubunu kontrol et
-      for (const [key, group] of Object.entries(this.patterns)) {
-        for (const pattern of group.patterns) {
-          const match = text.match(pattern)
-          if (match) {
-            return {
-              domain: group.domain,
-              action: group.getAction ? group.getAction(text.toLowerCase()) : (group.action || 'unknown'),
-              match: match
-            }
-          }
+    const mlResult = await this.analyzeIntentML(text)
+    if (mlResult && mlResult.confidence >= 0.8) {
+      return mlResult
+    }
+    for (const key in this.patterns) {
+      const group = this.patterns[key]
+      for (const pattern of group.patterns) {
+        const match = text.match(pattern)
+        if (match) {
+          const action = group.getAction ? group.getAction(text.toLowerCase()) : group.action
+          return { domain: group.domain, action, match }
         }
       }
+    }
+    return null
+  }
 
-      return null
+  async analyzeIntentML(text) {
+    try {
+      const response = await fetch('/api/analyze-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      })
+      const data = await response.json()
+      return data
     } catch (error) {
-      console.error('Niyet analizi hatası:', error)
+      console.error('ML Intent Analysis Error:', error)
       return null
     }
   }
@@ -538,6 +699,21 @@ Her zaman daha doğal bir dille konuşabilirsiniz. Size yardımcı olmak için e
           }
           return await context.addUnit({
             name: params.name,
+            status: 'active'
+          })
+
+        case 'stockMovement_create':
+          if (!params.name) throw new Error('Ürün adı gerekli')
+          if (!params.quantity) throw new Error('Miktar gerekli')
+          const stockMovementProduct = await this.findProduct(params.name)
+          if (!stockMovementProduct) throw new Error('Ürün bulunamadı')
+          return await context.addStockMovement({
+            type: params.quantity > 0 ? 'in' : 'out',
+            product_id: stockMovementProduct.id,
+            quantity: Math.abs(params.quantity),
+            unit_id: stockMovementProduct.unit_id,
+            price: stockMovementProduct.price_selling || 0,
+            total_price: stockMovementProduct.price_selling * Math.abs(params.quantity),
             status: 'active'
           })
 
@@ -703,7 +879,7 @@ Her zaman daha doğal bir dille konuşabilirsiniz. Size yardımcı olmak için e
   }
 
   async handleLearningMode(text) {
-    const match = text.match(/(?:öğren|kaydet):\s*"([^"]+)"\s*->?\s*"([^"]+)"/)
+    const match = text.match(/(?:öğren|kaydet):\s*"([^"]+)"\s*->\s*"([^"]+)"/)
     if (match) {
       const [_, trigger, action] = match
       await this.saveLearnedCommand({

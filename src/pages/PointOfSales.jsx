@@ -1,11 +1,9 @@
 import React, { useState, useMemo } from 'react'
-import { useData } from '../context/DataContext'
 import { useRealtime } from '../context/RealtimeContext'
 
 const PointOfSales = () => {
-  // DataContext'ten satış işlemi fonksiyonunu alıyoruz ve RealtimeContext'ten güncel ürün listesini çekiyoruz
-  const { handleProductSale } = useData()
-  const { products } = useRealtime()
+  // RealtimeContext'ten satış işlemi fonksiyonunu alıyoruz ve RealtimeContext'ten güncel ürün listesini çekiyoruz
+  const { handleProductSale, products } = useRealtime()
   
   const [searchTerm, setSearchTerm] = useState('')
   const [cart, setCart] = useState([])

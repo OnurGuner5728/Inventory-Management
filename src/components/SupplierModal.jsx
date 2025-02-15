@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useData } from '../context/DataContext'
+import { useRealtime } from '../context/RealtimeContext'
 
 const SupplierModal = ({ isOpen, onClose, editingSupplier }) => {
-  const { addSupplier, updateSupplier } = useData()
+  const { addSupplier, updateSupplier } = useRealtime()
   const [formData, setFormData] = useState({
     name: '',
     contact_person: '',

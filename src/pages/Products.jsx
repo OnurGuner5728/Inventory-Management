@@ -5,8 +5,7 @@ import Barcode from 'react-barcode'
 import {QRCodeSVG} from 'qrcode.react'
 
 const Products = () => {
-  const { deleteProduct } = useRealtime()
-  const { products, categories, suppliers, units, refetchData } = useRealtime()
+  const { deleteProduct, products, categories, suppliers, units, refetchData } = useRealtime()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')

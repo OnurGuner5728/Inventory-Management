@@ -11,16 +11,15 @@ import { supabase } from '../utils/supabase'
 // AIChat bileşeni; bu bileşeni ana sayfa veya layout içerisine ekleyerek test amaçlı kullanabilirsiniz.
 // Bu örnekte, props üzerinden ilgili modal açma fonksiyonları alınabilir. Örneğin:
 // onOpenProductModal, onOpenCategoryModal, onOpenStockMovementModal, ... gibi.
-const AIChat = (props) => {
+const AIChat = ({ onOpenProductModal, onOpenCategoryModal, onOpenStockMovementModal, onOpenStockCountingModal, onOpenSupplierModal, onOpenUnitModal, navigate }) => {
   const [messages, setMessages] = useState([])         // Sohbet mesajlarını tutar.
   const [input, setInput] = useState('')                // Kullanıcı inputunu tutar.
   const [customCommands, setCustomCommands] = useState({})// Öğrenilmiş (custom) komutları tutar.
   const [pendingCommand, setPendingCommand] = useState(null) // Öğrenilmek istenen komut bilgisi beklemede.
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef(null)
-  const navigate = useNavigate()
-  const { 
-    addCategory, updateCategory, deleteCategory,
+  const { addCategory,  addUnit, addStockMovement,
+    updateCategory, deleteCategory,
     addSubCategory, updateSubCategory, deleteSubCategory,
     addProduct, updateProduct, deleteProduct,
     addSupplier, updateSupplier, deleteSupplier,
@@ -187,7 +186,180 @@ const AIChat = (props) => {
     return false
   }
 
-  // AI yanıt işleme fonksiyonu güncellendi
+  // Yeni direkt aksiyonları işlemek için yardımcı fonksiyon
+  async function executeDirectAction(action) {
+    try {
+      switch(action.operation) {
+        case 'addCategory': {
+          const { name, description, icon } = action.data;
+          if (!name) {
+            await addSystemMessage("Kategori eklemek için 'name' bilgisi gerekiyor.");
+            return;
+          }
+          const newCategory = await addCategory({ name, description, icon });
+          await addSystemMessage(`Kategori başarıyla eklendi: ${newCategory.name}`);
+          break;
+        }
+        case 'updateCategory': {
+          const { id, data } = action.data;
+          if (!id || !data) {
+            await addSystemMessage("Güncelleme için kategori id ve veriler gerekli.");
+            return;
+          }
+          await updateCategory(id, data);
+          await addSystemMessage("Kategori başarıyla güncellendi.");
+          break;
+        }
+        case 'deleteCategory': {
+          const { id } = action.data;
+          if (!id) {
+            await addSystemMessage("Silme için kategori id gerekli.");
+            return;
+          }
+          await deleteCategory(id);
+          await addSystemMessage("Kategori başarıyla silindi.");
+          break;
+        }
+        case 'addProduct': {
+          const productData = action.data;
+          if (!productData) {
+            await addSystemMessage("Ürün eklemek için ürün verileri gerekli.");
+            return;
+          }
+          const newProduct = await addProduct(productData);
+          await addSystemMessage(`Ürün başarıyla eklendi: ${newProduct.name}`);
+          break;
+        }
+        case 'updateProduct': {
+          const { id, data } = action.data;
+          if (!id || !data) {
+            await addSystemMessage("Ürün güncellemek için id ve güncel veri gerekli.");
+            return;
+          }
+          await updateProduct(id, data);
+          await addSystemMessage("Ürün başarıyla güncellendi.");
+          break;
+        }
+        case 'deleteProduct': {
+          const { id } = action.data;
+          if (!id) {
+            await addSystemMessage("Ürün silmek için id gerekli.");
+            return;
+          }
+          await deleteProduct(id);
+          await addSystemMessage("Ürün başarıyla silindi.");
+          break;
+        }
+        case 'addSupplier': {
+          const supplierData = action.data;
+          if (!supplierData) {
+            await addSystemMessage("Tedarikçi eklemek için veriler gerekli.");
+            return;
+          }
+          const newSupplier = await addSupplier(supplierData);
+          await addSystemMessage(`Tedarikçi başarıyla eklendi: ${newSupplier.name}`);
+          break;
+        }
+        case 'updateSupplier': {
+          const { id, data } = action.data;
+          if (!id || !data) {
+            await addSystemMessage("Tedarikçi güncellemek için id ve veriler gerekli.");
+            return;
+          }
+          await updateSupplier(id, data);
+          await addSystemMessage("Tedarikçi başarıyla güncellendi.");
+          break;
+        }
+        case 'deleteSupplier': {
+          const { id } = action.data;
+          if (!id) {
+            await addSystemMessage("Tedarikçi silmek için id gerekli.");
+            return;
+          }
+          await deleteSupplier(id);
+          await addSystemMessage("Tedarikçi başarıyla silindi.");
+          break;
+        }
+        case 'addUnit': {
+          const unitData = action.data;
+          if (!unitData) {
+            await addSystemMessage("Birim eklemek için veriler gerekli.");
+            return;
+          }
+          const newUnit = await addUnit(unitData);
+          await addSystemMessage(`Birim başarıyla eklendi: ${newUnit.name}`);
+          break;
+        }
+        case 'updateUnit': {
+          const { id, data } = action.data;
+          if (!id || !data) {
+            await addSystemMessage("Birim güncellemek için id ve veriler gerekli.");
+            return;
+          }
+          await updateUnit(id, data);
+          await addSystemMessage("Birim başarıyla güncellendi.");
+          break;
+        }
+        case 'deleteUnit': {
+          const { id } = action.data;
+          if (!id) {
+            await addSystemMessage("Birim silmek için id gerekli.");
+            return;
+          }
+          await deleteUnit(id);
+          await addSystemMessage("Birim başarıyla silindi.");
+          break;
+        }
+        case 'addSubCategory': {
+          const { categoryId, data } = action.data;
+          if (!categoryId || !data) {
+            await addSystemMessage("Alt kategori eklemek için kategori id ve veriler gerekli.");
+            return;
+          }
+          await addSubCategory(categoryId, data);
+          await addSystemMessage("Alt kategori başarıyla eklendi.");
+          break;
+        }
+        case 'updateSubCategory': {
+          const { categoryId, subCategoryId, data } = action.data;
+          if (!categoryId || !subCategoryId || !data) {
+            await addSystemMessage("Alt kategori güncellemek için kategori id, alt kategori id ve veriler gerekli.");
+            return;
+          }
+          await updateSubCategory(categoryId, subCategoryId, data);
+          await addSystemMessage("Alt kategori başarıyla güncellendi.");
+          break;
+        }
+        case 'deleteSubCategory': {
+          const { categoryId, subCategoryId } = action.data;
+          if (!categoryId || !subCategoryId) {
+            await addSystemMessage("Alt kategori silmek için kategori id ve alt kategori id gerekli.");
+            return;
+          }
+          await deleteSubCategory(categoryId, subCategoryId);
+          await addSystemMessage("Alt kategori başarıyla silindi.");
+          break;
+        }
+        case 'addStockMovement': {
+          const movementData = action.data;
+          if (!movementData) {
+            await addSystemMessage("Stok hareketi eklemek için veriler gerekli.");
+            return;
+          }
+          await addStockMovement(movementData);
+          await addSystemMessage("Stok hareketi başarıyla eklendi.");
+          break;
+        }
+        default:
+          await addSystemMessage("Bilinmeyen direkt işlem türü.");
+      }
+    } catch (error) {
+      console.error("Direkt işlem hatası:", error);
+      await addSystemMessage(`İşlem başarısız: ${error.message}`);
+    }
+  }
+
+  // Mevcut processAIResponse fonksiyonunda action kontrolünü güncelliyoruz
   const processAIResponse = async (userInput) => {
     if (!userInput || typeof userInput !== 'string') {
       console.warn('Geçersiz kullanıcı girişi:', userInput)
@@ -198,51 +370,67 @@ const AIChat = (props) => {
     try {
       await addUserMessage(userInput)
 
+      // Öğrenme modu kontrolü
+      if (await handleLearning(userInput)) {
+        setIsLoading(false)
+        return
+      }
+
+      // Geçmiş sorgulama kontrolü
+      if (await handleHistoryQuery(userInput)) {
+        setIsLoading(false)
+        return
+      }
+
       const result = await chatService.processNaturalLanguage(userInput, {
         addCategory,
+        addUnit,
+        addStockMovement,
         updateCategory,
         deleteCategory,
-        addProduct,
-        updateProduct,
-        deleteProduct,
         addSubCategory,
         updateSubCategory,
         deleteSubCategory,
+        addProduct,
+        updateProduct,
+        deleteProduct,
         addSupplier,
         updateSupplier,
         deleteSupplier,
         settings,
         navigate,
-        handleModalOpen
+        onOpenProductModal,
+        onOpenCategoryModal,
+        onOpenStockMovementModal,
+        onOpenStockCountingModal,
+        onOpenSupplierModal,
+        onOpenUnitModal
       })
 
       if (result?.success) {
+        // Aksiyon varsa işle
         if (result.action) {
-          switch (result.action.type) {
-            case 'navigation':
-              navigate(result.action.path)
-              await addSystemMessage(`"${result.action.path}" sayfasına yönlendiriliyorsunuz.`)
-              break
-            case 'modal':
-              handleModalOpen(result.action.modalType)
-              await addSystemMessage(`${result.action.modalType} modalı açılıyor.`)
-              break
-            default:
-              console.warn('Bilinmeyen eylem türü:', result.action.type)
+          if (result.action.type === "direct") {
+            await executeDirectAction(result.action)
+          } else if (result.action.type === "modal") {
+            handleModalOpen(result.action.modalType)
+          } else if (result.action.type === "navigation") {
+            handleNavigation(result.action.path)
           }
         }
         
-        if (result.message && typeof result.message === 'string') {
+        // Mesajı göster
+        if (result.message) {
           await addSystemMessage(result.message)
         }
       } else {
         const errorMessage = result?.message || 'Bilinmeyen bir hata oluştu'
-        await addSystemMessage('Üzgünüm, bir hata oluştu: ' + errorMessage)
+        await addSystemMessage(errorMessage)
       }
 
     } catch (error) {
       console.error('İşlem hatası:', error)
-      await addSystemMessage('Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.')
+      await addSystemMessage('Üzgünüm, bir hata oluştu: ' + error.message)
     } finally {
       setIsLoading(false)
     }
@@ -299,12 +487,12 @@ const AIChat = (props) => {
 
   const handleModalOpen = (modalType) => {
     const modalHandlers = {
-      'ürün': props.onOpenProductModal,
-      'kategori': props.onOpenCategoryModal,
-      'stok': props.onOpenStockMovementModal,
-      'sayım': props.onOpenStockCountingModal,
-      'tedarikçi': props.onOpenSupplierModal,
-      'birim': props.onOpenUnitModal
+      'ürün': onOpenProductModal,
+      'kategori': onOpenCategoryModal,
+      'stok': onOpenStockMovementModal,
+      'sayım': onOpenStockCountingModal,
+      'tedarikçi': onOpenSupplierModal,
+      'birim': onOpenUnitModal
     }
 
     const handler = modalHandlers[modalType]
@@ -321,7 +509,6 @@ const AIChat = (props) => {
     const userInput = input.trim()
     setInput('')
     await processAIResponse(userInput)
-
   }
 
   return (
@@ -412,7 +599,6 @@ const AIChat = (props) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
                       handleSubmit(e);
-                     
                     }
                   }}
                   style={{

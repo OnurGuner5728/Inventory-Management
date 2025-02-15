@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react'
-import { useData } from '../context/DataContext'
 import { useRealtime } from '../context/RealtimeContext'
 import SupplierModal from '../components/SupplierModal'
 
 const Suppliers = () => {
-  const { deleteSupplier } = useData()
+  const { deleteSupplier } = useRealtime()
   const { suppliers } = useRealtime()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingSupplier, setEditingSupplier] = useState(null)

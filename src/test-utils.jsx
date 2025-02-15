@@ -1,15 +1,13 @@
 import React from 'react'
 import { render } from '@testing-library/react'
-import { DataProvider } from './context/DataContext'
+
 import { RealtimeProvider } from './context/RealtimeContext'
 
 const AllTheProviders = ({ children }) => {
   return (
-    <DataProvider>
-      <RealtimeProvider>
-        {children}
-      </RealtimeProvider>
-    </DataProvider>
+    <RealtimeProvider>
+      {children}
+    </RealtimeProvider>
   )
 }
 

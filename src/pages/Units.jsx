@@ -1,18 +1,16 @@
 import { useState, useEffect } from 'react'
-import { useData } from '../context/DataContext'
 import { useRealtime } from '../context/RealtimeContext'
 import UnitModal from '../components/UnitModal'
 
 const Units = () => {
-  const { deleteUnit } = useData()
-  const { units } = useRealtime()
+  const { deleteUnit, units } = useRealtime()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingUnit, setEditingUnit] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (units && units.length > 0) {
+    if (units) {
       setLoading(false)
     }
   }, [units])

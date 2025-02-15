@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRealtime } from '../context/RealtimeContext'
-import { useData } from '../context/DataContext'
 import Barcode from 'react-barcode'
 import {QRCodeSVG} from 'qrcode.react'
 
 const ProductModal = ({ isOpen, onClose, editingProduct = null }) => {
-  const { generateBarcode } = useData()
+  const { generateBarcode } = useRealtime()
   const {
     categories,
     addProduct,

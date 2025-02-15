@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { useData } from '../context/DataContext'
+import { useRealtime } from '../context/RealtimeContext'
 import CountingModal from '../components/CountingModal'
 import * as XLSX from 'xlsx'
 
 function Counting() {
-  const { products, addStockMovement, units, stockMovements } = useData()
+  const { products, addStockMovement, units, stockMovements } = useRealtime()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -210,21 +210,20 @@ function Counting() {
     try {
       // Her bir ürün için ters stok hareketi oluştur
       for (const item of completedList) {
-        const totalDifference = 
-          (item.countedWarehouse + item.countedShelf) -
-          (item.warehouseStock + item.shelfStock)
+        const totalDifference = (item.countedWarehouse + item.countedShelf) - (item.warehouseStock + item.shelfStock);
 
         if (totalDifference !== 0) {
+          const product = products.find(p => p.id === item.productId);
           await addStockMovement({
             type: totalDifference > 0 ? 'OUT' : 'IN',
             product_id: item.productId,
             quantity: Math.abs(totalDifference),
-            unit_id: item.unit_id,
-            unit_amount: item.unit_amount,
+            unit_id: product?.unit_id,
+            unit_amount: product?.unit_amount,
             price: item.price,
             total_price: item.price * Math.abs(totalDifference),
-            vat_rate: item.vat_rate || 0,
-            vat_amount: (item.price * Math.abs(totalDifference) * (item.vat_rate || 0)) / 100,
+            vat_rate: product?.vat_rate || 0,
+            vat_amount: (item.price * Math.abs(totalDifference) * (product?.vat_rate || 0)) / 100,
             document_no: `${totalDifference > 0 ? 'GIR' : 'CIK'}-${new Date().getFullYear()}-${String(stockMovements.length + 1).padStart(4, '0')}`,
             description: `Sayım iptali: ${item.note || ''}`,
             source_type: totalDifference > 0 ? 'WAREHOUSE' : 'COUNT_SURPLUS',
@@ -235,7 +234,7 @@ function Counting() {
             created_by: 'SYSTEM',
             status: 'COMPLETED',
             created_at: new Date().toISOString()
-          })
+          });
         }
       }
 

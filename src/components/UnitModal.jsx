@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useData } from '../context/DataContext'
+import { useRealtime } from '../context/RealtimeContext'
 
 const UnitModal = ({ isOpen, onClose, editingUnit }) => {
-  const { addUnit, updateUnit } = useData()
+  const { addUnit, updateUnit } = useRealtime()
   const [formData, setFormData] = useState({
     name: '',
     short_name: '',

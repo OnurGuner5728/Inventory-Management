@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
-import { useData } from '../context/DataContext'
+import { useRealtime } from '../context/RealtimeContext'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   PieChart, Pie, Cell, LineChart, Line, ResponsiveContainer,
@@ -34,7 +34,7 @@ const CollapsibleSection = ({ title, description, children }) => {
 }
 
 function Dashboard() {
-  const { products, categories, stockMovements, units, suppliers } = useData()
+  const { products, categories, stockMovements, units, suppliers } = useRealtime()
   const [timeRange, setTimeRange] = useState('week') // week, month, year
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [analysisType, setAnalysisType] = useState('all') // all, sales, stock, financial
@@ -64,10 +64,8 @@ function Dashboard() {
 
   // Para formatı
   const formatPrice = (price) => {
-    return new Intl.NumberFormat('tr-TR', {
-      style: 'currency',
-      currency: 'TRY'
-    }).format(price)
+    if (isNaN(Number(price))) return '-';
+    return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(price);
   }
 
   // Stok değeri hesaplama (Kategoriye göre filtrelenmiş)

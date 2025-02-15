@@ -1,5 +1,4 @@
 import { HashRouter as Router, Routes, Route } from 'react-router-dom'
-import { DataProvider } from './context/DataContext'
 import { RealtimeProvider } from './context/RealtimeContext'
 import { SupabaseProvider } from './context/SupabaseContext'
 import { useSupabase } from './context/SupabaseContext'
@@ -39,37 +38,34 @@ const AppContent = () => {
     }
 
     return (
-        <DataProvider>
-            <RealtimeProvider>
-                <ToastContainer />
-                <Router>
-                    <div className="min-h-screen bg-gray-50">
-                        <Navbar />
-                        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-                            <Routes>
-                                <Route path="/" element={<Dashboard />} />
-                                <Route path="/products" element={<Products />} />
-                                <Route path="/categories" element={<Categories />} />
-                                <Route path="/stock-movements" element={<StockMovements />} />
-                                <Route path="/counting" element={<Counting />} />
-                                <Route path="/suppliers" element={<Suppliers />} />
-                                <Route path="/units" element={<Units />} />
-                                <Route path="/settings" element={<Settings />} />
-                                <Route path="/pos" element={<PointOfSales />} />
-                            </Routes>
-                        </main>
-                        <AIChat 
-                            onOpenProductModal={() => console.log("Ürün ekleme modalı açılacak")}
-                            onOpenCategoryModal={() => console.log("Kategori ekleme modalı açılacak")}
-                            onOpenStockMovementModal={() => console.log("Stok hareketi modalı açılacak")}
-                            onOpenStockCountingModal={() => console.log("Stok sayımı modalı açılacak")}
-                            onOpenSupplierModal={() => console.log("Tedarikçi ekleme modalı açılacak")}
-                            onOpenUnitModal={() => console.log("Birim ekleme modalı açılacak")}
-                        />
-                    </div>
-                </Router>
-            </RealtimeProvider>
-        </DataProvider>
+        <RealtimeProvider>
+            <Router>
+                <div className="min-h-screen bg-gray-50">
+                    <Navbar />
+                    <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+                        <Routes>
+                            <Route path="/" element={<Dashboard />} />
+                            <Route path="/products" element={<Products />} />
+                            <Route path="/categories" element={<Categories />} />
+                            <Route path="/stock-movements" element={<StockMovements />} />
+                            <Route path="/counting" element={<Counting />} />
+                            <Route path="/suppliers" element={<Suppliers />} />
+                            <Route path="/units" element={<Units />} />
+                            <Route path="/settings" element={<Settings />} />
+                            <Route path="/pos" element={<PointOfSales />} />
+                        </Routes>
+                    </main>
+                    <AIChat 
+                        onOpenProductModal={() => console.log("Ürün ekleme modalı açılacak")}
+                        onOpenCategoryModal={() => console.log("Kategori ekleme modalı açılacak")}
+                        onOpenStockMovementModal={() => console.log("Stok hareketi modalı açılacak")}
+                        onOpenStockCountingModal={() => console.log("Stok sayımı modalı açılacak")}
+                        onOpenSupplierModal={() => console.log("Tedarikçi ekleme modalı açılacak")}
+                        onOpenUnitModal={() => console.log("Birim ekleme modalı açılacak")}
+                    />
+                </div>
+            </Router>
+        </RealtimeProvider>
     )
 }
 

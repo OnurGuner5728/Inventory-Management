@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useData } from '../context/DataContext'
 import { useRealtime } from '../context/RealtimeContext'
 import StockMovementModal from '../components/StockMovementModal'
 
@@ -8,10 +7,6 @@ const StockMovements = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const [dateRange, setDateRange] = useState({
-    start: '',
-    end: ''
-  })
   const [filters, setFilters] = useState({
     type: '',
     productId: '',
@@ -20,8 +15,8 @@ const StockMovements = () => {
   })
 
   useEffect(() => {
-    if (stockMovements && stockMovements.length > 0) {
-      setLoading(false)
+    if (stockMovements) {
+      setLoading(false);
     }
   }, [stockMovements])
 
@@ -209,10 +204,10 @@ const StockMovements = () => {
                   </td>
                 </tr>
               ) : (
-                filteredMovements.map((movement) => {
+                filteredMovements.map((movement, index) => {
                   const product = products.find(p => p.id === movement.product_id)
                   return (
-                    <tr key={movement.id || `${movement.document_no}-${movement.created_at}`} className="hover:bg-gray-50">
+                    <tr key={movement.id ? `movement-${movement.id}-${index}` : `movement-${movement.document_no}-${movement.created_at}-${index}`} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {movement.document_no || '-'}
                       </td>
